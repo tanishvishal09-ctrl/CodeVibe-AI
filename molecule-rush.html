@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Molecule Rush 2.0 - ChemAI Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 90%;
+            max-width: 800px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .game-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .game-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .game-area {
+            padding: 30px;
+            min-height: 400px;
+            position: relative;
+        }
+
+        /* Tutorial/Onboarding Overlay */
+        .tutorial-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .tutorial-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .tutorial-title {
+            font-size: 28px;
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .tutorial-step {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .tutorial-step h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        /* Settings Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 900;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            color: #667eea;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .setting-group {
+            margin: 20px 0;
+        }
+
+        .setting-label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #667eea;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Game Elements */
+        .molecule-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .molecule-name {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .molecule-formula {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .option-btn {
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+
+        .option-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .option-btn.correct {
+            background: #48bb78;
+            color: white;
+            border-color: #48bb78;
+        }
+
+        .option-btn.incorrect {
+            background: #f56565;
+            color: white;
+            border-color: #f56565;
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Feedback Messages */
+        .feedback {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 18px;
+            z-index: 1100;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .feedback.success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .feedback.error {
+            background: #f56565;
+            color: white;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translate(-50%, -100px);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
+        }
+
+        /* Pause Screen */
+        .pause-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 950;
+        }
+
+        .pause-content {
+            text-align: center;
+            color: white;
+        }
+
+        .pause-content h2 {
+            font-size: 48px;
+            margin-bottom: 30px;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .difficulty-easy {
+            background: #48bb78;
+            color: white;
+        }
+
+        .difficulty-medium {
+            background: #ed8936;
+            color: white;
+        }
+
+        .difficulty-hard {
+            background: #f56565;
+            color: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .game-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .game-stats {
+                justify-content: center;
+                width: 100%;
+            }
+
+            .game-controls {
+                justify-content: center;
+                width: 100%;
+            }
+
+            .molecule-name {
+                font-size: 24px;
+            }
+
+            .molecule-formula {
+                font-size: 16px;
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tutorial-content {
+                padding: 20px;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Colorblind Mode */
+        body.colorblind-mode .option-btn.correct {
+            background: #3182ce;
+            border-color: #3182ce;
+        }
+
+        body.colorblind-mode .option-btn.incorrect {
+            background: #805ad5;
+            border-color: #805ad5;
+        }
+
+        body.colorblind-mode .feedback.success {
+            background: #3182ce;
+        }
+
+        body.colorblind-mode .feedback.error {
+            background: #805ad5;
+        }
+
+        /* Game Start Screen */
+        .start-screen {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .start-screen h2 {
+            font-size: 36px;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .start-screen p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .start-btn {
+            padding: 15px 40px;
+            font-size: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Game Over Screen */
+        .game-over-screen {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .game-over-screen h2 {
+            font-size: 36px;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .final-stats {
+            background: #f7fafc;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .final-stat {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 18px;
+        }
+
+        .final-stat-label {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .final-stat-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Game Header -->
+        <div class="game-header">
+            <div class="game-title">🧪 Molecule Rush 2.0</div>
+            <div class="game-stats">
+                <div class="stat">
+                    <div class="stat-label">Score</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Level</div>
+                    <div class="stat-value" id="level">1</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Lives</div>
+                    <div class="stat-value" id="lives">❤️❤️❤️</div>
+                </div>
+            </div>
+            <div class="game-controls">
+                <button class="btn btn-secondary" id="pauseBtn">⏸️ Pause</button>
+                <button class="btn btn-secondary" id="settingsBtn">⚙️ Settings</button>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area" id="gameArea">
+            <!-- Start Screen -->
+            <div class="start-screen" id="startScreen">
+                <h2>Welcome to Molecule Rush 2.0!</h2>
+                <p>Test your chemistry knowledge by matching molecules with their properties!</p>
+                <button class="start-btn" id="startBtn">🚀 Start Game</button>
+                <button class="btn btn-secondary" style="margin-left: 10px;" id="tutorialBtn">📖 Tutorial</button>
+            </div>
+
+            <!-- Game Content (initially hidden) -->
+            <div class="hidden" id="gameContent">
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                </div>
+                <div class="difficulty-badge difficulty-easy" id="difficultyBadge">Easy Mode</div>
+                
+                <div class="molecule-card" id="moleculeCard">
+                    <div class="molecule-name" id="moleculeName">Loading...</div>
+                    <div class="molecule-formula" id="moleculeFormula">...</div>
+                </div>
+
+                <div id="questionText" style="font-size: 18px; margin-bottom: 20px; text-align: center; font-weight: bold; color: #333;">
+                    Select the correct property:
+                </div>
+
+                <div class="options-grid" id="optionsGrid">
+                    <!-- Options will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Game Over Screen (initially hidden) -->
+            <div class="hidden" id="gameOverScreen">
+                <div class="game-over-screen">
+                    <h2>🎮 Game Over!</h2>
+                    <div class="final-stats">
+                        <div class="final-stat">
+                            <span class="final-stat-label">Final Score:</span>
+                            <span class="final-stat-value" id="finalScore">0</span>
+                        </div>
+                        <div class="final-stat">
+                            <span class="final-stat-label">Highest Level:</span>
+                            <span class="final-stat-value" id="finalLevel">1</span>
+                        </div>
+                        <div class="final-stat">
+                            <span class="final-stat-label">Correct Answers:</span>
+                            <span class="final-stat-value" id="correctAnswers">0</span>
+                        </div>
+                        <div class="final-stat">
+                            <span class="final-stat-label">Accuracy:</span>
+                            <span class="final-stat-value" id="accuracy">0%</span>
+                        </div>
+                    </div>
+                    <button class="start-btn" id="restartBtn">🔄 Play Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tutorial Overlay -->
+    <div class="tutorial-overlay hidden" id="tutorialOverlay">
+        <div class="tutorial-content">
+            <div class="tutorial-title">🎓 How to Play Molecule Rush 2.0</div>
+            
+            <div class="tutorial-step">
+                <h3>🎯 Objective</h3>
+                <p>Match molecules with their correct properties to score points and advance through levels!</p>
+            </div>
+
+            <div class="tutorial-step">
+                <h3>🎮 Gameplay</h3>
+                <p>• A molecule and its formula will be displayed<br>
+                • Choose the correct answer from the options<br>
+                • Earn points for correct answers<br>
+                • Lose a life for wrong answers</p>
+            </div>
+
+            <div class="tutorial-step">
+                <h3>⚡ Difficulty</h3>
+                <p>• Easy (Levels 1-3): Basic molecules<br>
+                • Medium (Levels 4-7): Intermediate challenges<br>
+                • Hard (Levels 8+): Expert level molecules<br>
+                • Difficulty increases smoothly as you progress</p>
+            </div>
+
+            <div class="tutorial-step">
+                <h3>💡 Tips</h3>
+                <p>• You start with 3 lives (❤️)<br>
+                • Correct answers: +10 points<br>
+                • Use the pause button anytime<br>
+                • Adjust settings for better experience</p>
+            </div>
+
+            <div class="tutorial-step">
+                <h3>♿ Accessibility</h3>
+                <p>• Colorblind mode available in settings<br>
+                • Sound can be adjusted or muted<br>
+                • Works on both desktop and mobile</p>
+            </div>
+
+            <button class="btn btn-primary" id="closeTutorialBtn" style="width: 100%; margin-top: 20px;">Got it! Let's Play</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal hidden" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">⚙️ Settings</div>
+                <button class="close-btn" id="closeSettingsBtn">&times;</button>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">Sound Effects Volume</label>
+                <input type="range" min="0" max="100" value="50" class="slider" id="soundVolume">
+                <div style="text-align: center; color: #666; margin-top: 5px;">
+                    <span id="soundVolumeValue">50</span>%
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">Music Volume</label>
+                <input type="range" min="0" max="100" value="30" class="slider" id="musicVolume">
+                <div style="text-align: center; color: #666; margin-top: 5px;">
+                    <span id="musicVolumeValue">30</span>%
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">
+                    Colorblind Mode
+                    <span style="font-weight: normal; font-size: 12px; color: #666;">
+                        (Uses blue/purple instead of green/red)
+                    </span>
+                </label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="colorblindMode">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">Sound Effects</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="soundEffects" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">Visual Feedback</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="visualFeedback" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <button class="btn btn-primary" id="saveSettingsBtn" style="width: 100%; margin-top: 20px;">Save Settings</button>
+        </div>
+    </div>
+
+    <!-- Pause Screen -->
+    <div class="pause-screen hidden" id="pauseScreen">
+        <div class="pause-content">
+            <h2>⏸️ PAUSED</h2>
+            <button class="btn btn-success" id="resumeBtn" style="font-size: 18px; padding: 15px 40px;">▶️ Resume</button>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            score: 0,
+            level: 1,
+            lives: 3,
+            currentQuestionIndex: 0,
+            correctAnswers: 0,
+            totalQuestions: 0,
+            isPaused: false,
+            isGameOver: false,
+            settings: {
+                soundVolume: 50,
+                musicVolume: 30,
+                colorblindMode: false,
+                soundEffects: true,
+                visualFeedback: true
+            }
+        };
+
+        // Molecule Database with different difficulty levels
+        const molecules = {
+            easy: [
+                {
+                    name: "Water",
+                    formula: "H₂O",
+                    question: "What is the common name for this molecule?",
+                    options: ["Water", "Salt", "Sugar", "Oxygen"],
+                    correct: 0
+                },
+                {
+                    name: "Carbon Dioxide",
+                    formula: "CO₂",
+                    question: "What gas do we exhale?",
+                    options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Helium"],
+                    correct: 2
+                },
+                {
+                    name: "Sodium Chloride",
+                    formula: "NaCl",
+                    question: "What is the chemical name for table salt?",
+                    options: ["Sugar", "Sodium Chloride", "Vinegar", "Baking Soda"],
+                    correct: 1
+                },
+                {
+                    name: "Oxygen",
+                    formula: "O₂",
+                    question: "What gas is essential for respiration?",
+                    options: ["Carbon Dioxide", "Nitrogen", "Oxygen", "Hydrogen"],
+                    correct: 2
+                },
+                {
+                    name: "Ammonia",
+                    formula: "NH₃",
+                    question: "What is the formula for ammonia?",
+                    options: ["NH₃", "NO₂", "N₂O", "NH₂"],
+                    correct: 0
+                }
+            ],
+            medium: [
+                {
+                    name: "Glucose",
+                    formula: "C₆H₁₂O₆",
+                    question: "What type of molecule is this?",
+                    options: ["Protein", "Lipid", "Carbohydrate", "Nucleic Acid"],
+                    correct: 2
+                },
+                {
+                    name: "Ethanol",
+                    formula: "C₂H₅OH",
+                    question: "What is the functional group in ethanol?",
+                    options: ["Carboxyl", "Hydroxyl", "Amino", "Carbonyl"],
+                    correct: 1
+                },
+                {
+                    name: "Acetic Acid",
+                    formula: "CH₃COOH",
+                    question: "What is the main component of vinegar?",
+                    options: ["Citric Acid", "Acetic Acid", "Lactic Acid", "Sulfuric Acid"],
+                    correct: 1
+                },
+                {
+                    name: "Methane",
+                    formula: "CH₄",
+                    question: "What is the simplest alkane?",
+                    options: ["Ethane", "Propane", "Methane", "Butane"],
+                    correct: 2
+                },
+                {
+                    name: "Hydrogen Peroxide",
+                    formula: "H₂O₂",
+                    question: "What is commonly used as a disinfectant?",
+                    options: ["Water", "Hydrogen Peroxide", "Alcohol", "Bleach"],
+                    correct: 1
+                }
+            ],
+            hard: [
+                {
+                    name: "Caffeine",
+                    formula: "C₈H₁₀N₄O₂",
+                    question: "What class of compounds does caffeine belong to?",
+                    options: ["Alkaloids", "Carbohydrates", "Lipids", "Steroids"],
+                    correct: 0
+                },
+                {
+                    name: "Aspirin",
+                    formula: "C₉H₈O₄",
+                    question: "What is the systematic name for aspirin?",
+                    options: ["Ibuprofen", "Acetylsalicylic Acid", "Paracetamol", "Naproxen"],
+                    correct: 1
+                },
+                {
+                    name: "DNA Base - Adenine",
+                    formula: "C₅H₅N₅",
+                    question: "What does adenine pair with in DNA?",
+                    options: ["Cytosine", "Guanine", "Thymine", "Uracil"],
+                    correct: 2
+                },
+                {
+                    name: "Benzene",
+                    formula: "C₆H₆",
+                    question: "What type of compound is benzene?",
+                    options: ["Aliphatic", "Aromatic", "Alicyclic", "Heterocyclic"],
+                    correct: 1
+                },
+                {
+                    name: "Chlorophyll A",
+                    formula: "C₅₅H₇₂O₅N₄Mg",
+                    question: "What process does chlorophyll enable?",
+                    options: ["Respiration", "Digestion", "Photosynthesis", "Fermentation"],
+                    correct: 2
+                }
+            ]
+        };
+
+        // DOM Elements
+        const elements = {
+            startScreen: document.getElementById('startScreen'),
+            gameContent: document.getElementById('gameContent'),
+            gameOverScreen: document.getElementById('gameOverScreen'),
+            tutorialOverlay: document.getElementById('tutorialOverlay'),
+            settingsModal: document.getElementById('settingsModal'),
+            pauseScreen: document.getElementById('pauseScreen'),
+            
+            score: document.getElementById('score'),
+            level: document.getElementById('level'),
+            lives: document.getElementById('lives'),
+            progressBar: document.getElementById('progressBar'),
+            difficultyBadge: document.getElementById('difficultyBadge'),
+            
+            moleculeName: document.getElementById('moleculeName'),
+            moleculeFormula: document.getElementById('moleculeFormula'),
+            questionText: document.getElementById('questionText'),
+            optionsGrid: document.getElementById('optionsGrid'),
+            
+            startBtn: document.getElementById('startBtn'),
+            restartBtn: document.getElementById('restartBtn'),
+            tutorialBtn: document.getElementById('tutorialBtn'),
+            closeTutorialBtn: document.getElementById('closeTutorialBtn'),
+            pauseBtn: document.getElementById('pauseBtn'),
+            resumeBtn: document.getElementById('resumeBtn'),
+            settingsBtn: document.getElementById('settingsBtn'),
+            closeSettingsBtn: document.getElementById('closeSettingsBtn'),
+            saveSettingsBtn: document.getElementById('saveSettingsBtn'),
+            
+            finalScore: document.getElementById('finalScore'),
+            finalLevel: document.getElementById('finalLevel'),
+            correctAnswersEl: document.getElementById('correctAnswers'),
+            accuracy: document.getElementById('accuracy')
+        };
+
+        // Audio Context for sound effects
+        let audioContext = null;
+
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(frequency, duration, type = 'correct') {
+            if (!gameState.settings.soundEffects) return;
+            
+            initAudio();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
+            
+            const volume = gameState.settings.soundVolume / 100;
+            gainNode.gain.setValueAtTime(volume * 0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        function playCorrectSound() {
+            playSound(523.25, 0.2); // C5
+            setTimeout(() => playSound(659.25, 0.2), 100); // E5
+        }
+
+        function playIncorrectSound() {
+            playSound(293.66, 0.3); // D4
+            setTimeout(() => playSound(261.63, 0.3), 150); // C4
+        }
+
+        function playLevelUpSound() {
+            playSound(523.25, 0.15);
+            setTimeout(() => playSound(659.25, 0.15), 100);
+            setTimeout(() => playSound(783.99, 0.3), 200);
+        }
+
+        // Show feedback message
+        function showFeedback(message, type) {
+            if (!gameState.settings.visualFeedback) return;
+            
+            const feedback = document.createElement('div');
+            feedback.className = `feedback ${type}`;
+            feedback.textContent = message;
+            document.body.appendChild(feedback);
+            
+            setTimeout(() => {
+                feedback.remove();
+            }, 2000);
+        }
+
+        // Get difficulty level based on game level
+        function getDifficulty() {
+            if (gameState.level <= 3) return 'easy';
+            if (gameState.level <= 7) return 'medium';
+            return 'hard';
+        }
+
+        // Update difficulty badge
+        function updateDifficultyBadge() {
+            const difficulty = getDifficulty();
+            elements.difficultyBadge.className = `difficulty-badge difficulty-${difficulty}`;
+            elements.difficultyBadge.textContent = `${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Mode`;
+        }
+
+        // Get random molecule based on difficulty
+        function getRandomMolecule() {
+            const difficulty = getDifficulty();
+            const moleculeList = molecules[difficulty];
+            return moleculeList[Math.floor(Math.random() * moleculeList.length)];
+        }
+
+        // Load new question
+        function loadQuestion() {
+            if (gameState.isGameOver) return;
+            
+            const molecule = getRandomMolecule();
+            
+            elements.moleculeName.textContent = molecule.name;
+            elements.moleculeFormula.textContent = molecule.formula;
+            elements.questionText.textContent = molecule.question;
+            
+            // Clear options
+            elements.optionsGrid.innerHTML = '';
+            
+            // Create option buttons
+            molecule.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option;
+                btn.onclick = () => checkAnswer(index, molecule.correct, btn);
+                elements.optionsGrid.appendChild(btn);
+            });
+            
+            // Update progress bar
+            const progress = ((gameState.level - 1) % 10) * 10;
+            elements.progressBar.style.width = `${progress}%`;
+            
+            updateDifficultyBadge();
+        }
+
+        // Check answer
+        function checkAnswer(selectedIndex, correctIndex, button) {
+            if (gameState.isPaused || gameState.isGameOver) return;
+            
+            gameState.totalQuestions++;
+            
+            // Disable all buttons
+            const allButtons = document.querySelectorAll('.option-btn');
+            allButtons.forEach(btn => btn.disabled = true);
+            
+            if (selectedIndex === correctIndex) {
+                // Correct answer
+                button.classList.add('correct');
+                gameState.score += 10;
+                gameState.correctAnswers++;
+                elements.score.textContent = gameState.score;
+                
+                showFeedback('✓ Correct!', 'success');
+                playCorrectSound();
+                
+                // Check for level up
+                if (gameState.score % 50 === 0) {
+                    gameState.level++;
+                    elements.level.textContent = gameState.level;
+                    showFeedback('🎉 Level Up!', 'success');
+                    playLevelUpSound();
+                }
+                
+                // Load next question after delay
+                setTimeout(() => {
+                    loadQuestion();
+                }, 1500);
+            } else {
+                // Incorrect answer
+                button.classList.add('incorrect');
+                allButtons[correctIndex].classList.add('correct');
+                
+                gameState.lives--;
+                updateLives();
+                
+                showFeedback('✗ Incorrect!', 'error');
+                playIncorrectSound();
+                
+                if (gameState.lives <= 0) {
+                    setTimeout(() => {
+                        endGame();
+                    }, 1500);
+                } else {
+                    setTimeout(() => {
+                        loadQuestion();
+                    }, 1500);
+                }
+            }
+        }
+
+        // Update lives display
+        function updateLives() {
+            const hearts = '❤️'.repeat(gameState.lives);
+            elements.lives.textContent = hearts || '💔';
+        }
+
+        // Start game
+        function startGame() {
+            gameState.score = 0;
+            gameState.level = 1;
+            gameState.lives = 3;
+            gameState.correctAnswers = 0;
+            gameState.totalQuestions = 0;
+            gameState.isPaused = false;
+            gameState.isGameOver = false;
+            
+            elements.score.textContent = '0';
+            elements.level.textContent = '1';
+            updateLives();
+            
+            elements.startScreen.classList.add('hidden');
+            elements.gameOverScreen.classList.add('hidden');
+            elements.gameContent.classList.remove('hidden');
+            
+            loadQuestion();
+        }
+
+        // End game
+        function endGame() {
+            gameState.isGameOver = true;
+            
+            elements.gameContent.classList.add('hidden');
+            elements.gameOverScreen.classList.remove('hidden');
+            
+            elements.finalScore.textContent = gameState.score;
+            elements.finalLevel.textContent = gameState.level;
+            elements.correctAnswersEl.textContent = gameState.correctAnswers;
+            
+            const accuracy = gameState.totalQuestions > 0 
+                ? Math.round((gameState.correctAnswers / gameState.totalQuestions) * 100) 
+                : 0;
+            elements.accuracy.textContent = accuracy + '%';
+        }
+
+        // Pause/Resume game
+        function togglePause() {
+            if (gameState.isGameOver) return;
+            
+            gameState.isPaused = !gameState.isPaused;
+            
+            if (gameState.isPaused) {
+                elements.pauseScreen.classList.remove('hidden');
+                elements.pauseBtn.textContent = '▶️ Resume';
+            } else {
+                elements.pauseScreen.classList.add('hidden');
+                elements.pauseBtn.textContent = '⏸️ Pause';
+            }
+        }
+
+        // Settings
+        function openSettings() {
+            elements.settingsModal.classList.remove('hidden');
+        }
+
+        function closeSettings() {
+            elements.settingsModal.classList.add('hidden');
+        }
+
+        function saveSettings() {
+            gameState.settings.soundVolume = parseInt(document.getElementById('soundVolume').value);
+            gameState.settings.musicVolume = parseInt(document.getElementById('musicVolume').value);
+            gameState.settings.colorblindMode = document.getElementById('colorblindMode').checked;
+            gameState.settings.soundEffects = document.getElementById('soundEffects').checked;
+            gameState.settings.visualFeedback = document.getElementById('visualFeedback').checked;
+            
+            // Apply colorblind mode
+            if (gameState.settings.colorblindMode) {
+                document.body.classList.add('colorblind-mode');
+            } else {
+                document.body.classList.remove('colorblind-mode');
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('moleculeRushSettings', JSON.stringify(gameState.settings));
+            
+            closeSettings();
+            showFeedback('Settings saved!', 'success');
+        }
+
+        function loadSettings() {
+            const saved = localStorage.getItem('moleculeRushSettings');
+            if (saved) {
+                gameState.settings = JSON.parse(saved);
+                
+                document.getElementById('soundVolume').value = gameState.settings.soundVolume;
+                document.getElementById('soundVolumeValue').textContent = gameState.settings.soundVolume;
+                document.getElementById('musicVolume').value = gameState.settings.musicVolume;
+                document.getElementById('musicVolumeValue').textContent = gameState.settings.musicVolume;
+                document.getElementById('colorblindMode').checked = gameState.settings.colorblindMode;
+                document.getElementById('soundEffects').checked = gameState.settings.soundEffects;
+                document.getElementById('visualFeedback').checked = gameState.settings.visualFeedback;
+                
+                if (gameState.settings.colorblindMode) {
+                    document.body.classList.add('colorblind-mode');
+                }
+            }
+        }
+
+        // Tutorial
+        function showTutorial() {
+            elements.tutorialOverlay.classList.remove('hidden');
+        }
+
+        function closeTutorial() {
+            elements.tutorialOverlay.classList.add('hidden');
+        }
+
+        // Event Listeners
+        elements.startBtn.addEventListener('click', startGame);
+        elements.restartBtn.addEventListener('click', startGame);
+        elements.tutorialBtn.addEventListener('click', showTutorial);
+        elements.closeTutorialBtn.addEventListener('click', closeTutorial);
+        elements.pauseBtn.addEventListener('click', togglePause);
+        elements.resumeBtn.addEventListener('click', togglePause);
+        elements.settingsBtn.addEventListener('click', openSettings);
+        elements.closeSettingsBtn.addEventListener('click', closeSettings);
+        elements.saveSettingsBtn.addEventListener('click', saveSettings);
+
+        // Volume sliders
+        document.getElementById('soundVolume').addEventListener('input', (e) => {
+            document.getElementById('soundVolumeValue').textContent = e.target.value;
+        });
+
+        document.getElementById('musicVolume').addEventListener('input', (e) => {
+            document.getElementById('musicVolumeValue').textContent = e.target.value;
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !gameState.isGameOver) {
+                togglePause();
+            }
+            if (e.key === 'p' && !gameState.isGameOver) {
+                togglePause();
+            }
+        });
+
+        // Initialize
+        loadSettings();
+
+        // Show tutorial on first visit
+        if (!localStorage.getItem('moleculeRushTutorialSeen')) {
+            setTimeout(() => {
+                showTutorial();
+                localStorage.setItem('moleculeRushTutorialSeen', 'true');
+            }, 500);
+        }
+    </script>
+</body>
+</html>
